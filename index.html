@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班表行事曆</title>
+<style>
+  :root{
+    --bg:#DCEBDD;
+    --bg-cell:#E7F1E7;
+    --ink:#1F3324;
+    --ink-soft:#3C5744;
+    --amber:#C07A2C;
+    --sun:#C0392B;
+    --today:#3C7A4F;
+    --line:rgba(60,87,68,0.14);
+    --asml-bg:#F3C892;
+    --asml-fg:#8A5416;
+    --adeng-bg:#F3C4CB;
+    --adeng-fg:#9C3A48;
+    --aq-bg:#BFE0DE;
+    --aq-fg:#1E6E68;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+    padding:22px 14px 40px;
+  }
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    color:var(--amber);
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:3px;
+  }
+  .eyebrow .ico{font-size:12px;}
+  h1{
+    font-size:23px;
+    font-weight:800;
+    color:var(--ink);
+    margin:0 0 10px;
+    letter-spacing:0.01em;
+  }
+  .options{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 12px;
+    margin-bottom:10px;
+  }
+  .option{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .box{
+    width:19px;height:19px;
+    border-radius:6px;
+    border:2px solid #9FBF9F;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    transition:background .15s, border-color .15s;
+  }
+  .box svg{opacity:0; transition:opacity .15s; width:11px; height:11px;}
+  .option input{display:none;}
+  .option input:checked + .box{
+    background:var(--today);
+    border-color:var(--today);
+  }
+  .option input:checked + .box svg{opacity:1;}
+  .option .label{
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+  }
+  .nav{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .nav button{
+    background:transparent;
+    border:2px solid var(--today);
+    color:var(--today);
+    border-radius:999px;
+    height:30px;
+    padding:0 12px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .nav button:active{background:rgba(60,122,79,0.12);}
+  .nav .arrow{width:30px;padding:0;}
+  .grid{
+    border-radius:6px;
+    overflow:hidden;
+    touch-action:pan-y;
+  }
+  .weekrow{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:4px;
+    margin-bottom:4px;
+  }
+  .wd{
+    background:var(--bg-cell);
+    border-radius:8px;
+    text-align:center;
+    padding:9px 2px;
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink-soft);
+  }
+  .wd.sun, .wd.sat{color:var(--sun);}
+  .weeks{display:flex; flex-direction:column; gap:4px;}
+  .daysrow{
+    display:grid;
+    grid-template-columns:repeat(7,1fr);
+    gap:4px;
+  }
+  .day{
+    background:var(--bg-cell);
+    border-radius:8px;
+    height:98px;
+    padding:6px 3px;
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    overflow:hidden;
+  }
+  .day.other{background:rgba(231,241,231,0.45);}
+  .day.other .daynum{color:#A9BDAB;}
+  .daynum{
+    font-size:14px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:2px;
+  }
+  .day.sun .daynum, .day.sat .daynum{color:var(--sun);}
+  .day.other.sun .daynum, .day.other.sat .daynum{color:#D6A8A3;}
+  .daynum.today{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:22px;height:22px;
+    border-radius:50%;
+    background:var(--today);
+    color:#fff;
+  }
+  .tag{
+    font-size:10px;
+    font-weight:700;
+    border-radius:4px;
+    padding:1.5px 3px;
+    line-height:1.4;
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+</style>
+</head>
+<body>
+
+<div class="eyebrow"><span class="ico">🗓</span>行事曆</div>
+<h1 id="monthLabel"></h1>
+
+<div class="options">
+  <label class="option">
+    <input type="checkbox" id="chk-asml" checked>
+    <span class="box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="label">ASML</span>
+  </label>
+  <label class="option">
+    <input type="checkbox" id="chk-adeng">
+    <span class="box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="label">阿鐙</span>
+  </label>
+  <label class="option">
+    <input type="checkbox" id="chk-aq">
+    <span class="box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M4 12l5 5L20 6" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span class="label">阿Q</span>
+  </label>
+</div>
+
+<div class="nav">
+  <button class="arrow" id="prev">←</button>
+  <button id="todayBtn">今天</button>
+  <button class="arrow" id="next">→</button>
+</div>
+
+<div class="grid">
+  <div class="weekrow">
+    <div class="wd sun">日</div>
+    <div class="wd">一</div>
+    <div class="wd">二</div>
+    <div class="wd">三</div>
+    <div class="wd">四</div>
+    <div class="wd">五</div>
+    <div class="wd sat">六</div>
+  </div>
+  <div class="weeks" id="weeks"></div>
+</div>
+
+<script>
+function toUTCDate(y,m,d){ return new Date(Date.UTC(y,m,d)); }
+function dayDiff(a,b){ return Math.round((a-b)/86400000); }
+
+const ASML_START = toUTCDate(2026,8,9);   // 2026-09-09
+const AQ_START   = toUTCDate(2026,8,9);   // 2026-09-09
+const ADENG_START= toUTCDate(2026,7,28);  // 2026-08-28
+
+function schedASML(date){
+  const diff = dayDiff(date, ASML_START);
+  const mod = ((diff % 6) + 6) % 6;
+  return mod < 3 ? {text:"ASML班", work:true} : {work:false};
+}
+function schedAQ(date){
+  const diff = dayDiff(date, AQ_START);
+  const mod = ((diff % 4) + 4) % 4;
+  return mod < 2 ? {text:"阿Q班", work:true} : {work:false};
+}
+function schedAdeng(date){
+  const diff = dayDiff(date, ADENG_START);
+  const mod = ((diff % 20) + 20) % 20;
+  if(mod < 5) return {text:"阿鐙夜班", work:true};
+  if(mod === 5) return {work:false};
+  if(mod < 11) return {text:"阿鐙中班", work:true};
+  if(mod < 13) return {work:false};
+  if(mod < 18) return {text:"阿鐙早班", work:true};
+  return {work:false};
+}
+
+const today = new Date();
+const todayUTC = toUTCDate(today.getFullYear(), today.getMonth(), today.getDate());
+let viewYear = today.getFullYear();
+let viewMonth = today.getMonth();
+
+const chkAsml = document.getElementById('chk-asml');
+const chkAdeng = document.getElementById('chk-adeng');
+const chkAq = document.getElementById('chk-aq');
+
+function render(){
+  document.getElementById('monthLabel').textContent = viewYear + " " + ["一月","二月","三月","四月","五月","六月","七月","八月","九月","十月","十一月","十二月"][viewMonth];
+
+  const firstOfMonth = toUTCDate(viewYear, viewMonth, 1);
+  const startWeekday = firstOfMonth.getUTCDay();
+  const daysInMonth = new Date(Date.UTC(viewYear, viewMonth+1, 0)).getUTCDate();
+  const daysInPrevMonth = new Date(Date.UTC(viewYear, viewMonth, 0)).getUTCDate();
+
+  const cells = [];
+  for(let i=0;i<startWeekday;i++){
+    const d = daysInPrevMonth - startWeekday + 1 + i;
+    cells.push({day:d, other:true, date: toUTCDate(viewYear, viewMonth-1, d)});
+  }
+  for(let d=1; d<=daysInMonth; d++){
+    cells.push({day:d, other:false, date: toUTCDate(viewYear, viewMonth, d)});
+  }
+  while(cells.length % 7 !== 0){
+    const idx = cells.length - (startWeekday + daysInMonth);
+    cells.push({day: idx+1, other:true, date: toUTCDate(viewYear, viewMonth+1, idx+1)});
+  }
+
+  const active = [];
+  if(chkAsml.checked) active.push({fn:schedASML, bg:"var(--asml-bg)", fg:"var(--asml-fg)"});
+  if(chkAdeng.checked) active.push({fn:schedAdeng, bg:"var(--adeng-bg)", fg:"var(--adeng-fg)"});
+  if(chkAq.checked) active.push({fn:schedAQ, bg:"var(--aq-bg)", fg:"var(--aq-fg)"});
+
+  let html = "";
+  for(let w=0; w<cells.length/7; w++){
+    html += `<div class="daysrow">`;
+    for(let i=0;i<7;i++){
+      const cell = cells[w*7+i];
+      const isToday = dayDiff(cell.date, todayUTC) === 0;
+      const isSun = i===0, isSat = i===6;
+      let cls = "day";
+      if(cell.other) cls += " other";
+      if(isSun) cls += " sun";
+      if(isSat) cls += " sat";
+      html += `<div class="${cls}"><div class="daynum${isToday?' today':''}">${cell.day}</div>`;
+      active.forEach(sch=>{
+        const r = sch.fn(cell.date);
+        if(!r.work) return;
+        html += `<span class="tag" style="background:${sch.bg};color:${sch.fg};">${r.text}</span>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+  document.getElementById('weeks').innerHTML = html;
+}
+
+document.getElementById('prev').addEventListener('click', ()=>{
+  viewMonth--;
+  if(viewMonth<0){viewMonth=11; viewYear--;}
+  render();
+});
+document.getElementById('next').addEventListener('click', ()=>{
+  viewMonth++;
+  if(viewMonth>11){viewMonth=0; viewYear++;}
+  render();
+});
+document.getElementById('todayBtn').addEventListener('click', ()=>{
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  render();
+});
+[chkAsml, chkAdeng, chkAq].forEach(c=>c.addEventListener('change', render));
+
+const gridEl = document.querySelector('.grid');
+let touchStartX = 0, touchStartY = 0, touchActive = false;
+
+gridEl.addEventListener('touchstart', (e)=>{
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchActive = true;
+}, {passive:true});
+
+gridEl.addEventListener('touchend', (e)=>{
+  if(!touchActive) return;
+  touchActive = false;
+  const dx = e.changedTouches[0].clientX - touchStartX;
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if(Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy)) return;
+  if(dx < 0){
+    viewMonth++;
+    if(viewMonth>11){viewMonth=0; viewYear++;}
+  } else {
+    viewMonth--;
+    if(viewMonth<0){viewMonth=11; viewYear--;}
+  }
+  render();
+}, {passive:true});
+
+render();
+</script>
+</body>
+</html>
